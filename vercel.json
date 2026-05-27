@@ -3,6 +3,9 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 30
+    },
+    "api/settlement/*.js": {
+      "maxDuration": 30
     }
   }
 }
