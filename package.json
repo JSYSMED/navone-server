@@ -2,11 +2,14 @@
   "name": "navone-server",
   "version": "1.0.0",
   "type": "module",
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "test:claim": "node test/claim-engine.test.mjs"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "express": "^5.2.1"
   }
 }
