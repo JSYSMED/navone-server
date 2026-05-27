@@ -6,7 +6,8 @@
     "node": "22.x"
   },
   "scripts": {
-    "test:claim": "node test/claim-engine.test.mjs"
+    "test:claim": "node test/claim-engine.test.mjs",
+    "start": "node server.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
