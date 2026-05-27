@@ -9,6 +9,12 @@
     },
     "api/order/*.js": {
       "maxDuration": 60
+    },
+    "api/penalty/*.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/penalty/risk-scan", "schedule": "0 0 * * *" }
+  ]
 }
