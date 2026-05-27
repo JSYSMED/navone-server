@@ -45,6 +45,9 @@ await load("/api/penalty/history", "./api/penalty/_history.js");
 await load("/api/settlement/daily", "./api/settlement/_daily.js");
 await load("/api/settlement/sync", "./api/settlement/_sync.js");
 await load("/api/settlement/margin-rank", "./api/settlement/_margin-rank.js");
+await load("/api/group/suggest", "./api/group/_suggest.js");
+await load("/api/group/create", "./api/group/_create.js");
+await load("/api/group/list", "./api/group/_list.js");
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("NavOne server on port " + port));
