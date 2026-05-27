@@ -5,7 +5,6 @@ import { join, relative } from "path";
 const app = express();
 app.use(express.json());
 
-// CORS
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
@@ -14,7 +13,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Auto-load all api/**/*.js files (skip _prefixed)
 async function loadRoutes(dir, base = "/api") {
   for (const f of readdirSync(dir)) {
     const full = join(dir, f);
@@ -23,9 +21,8 @@ async function loadRoutes(dir, base = "/api") {
     } else if (f.endsWith(".js") && !f.startsWith("_") && !f.startsWith("[")) {
       const route = base + "/" + f.replace(".js", "");
       const mod = await import("./" + relative(".", full));
-      const handler = mod.default;
       app.all(route, async (req, res) => {
-        try { await handler(req, res); } catch (e) {
+        try { await mod.default(req, res); } catch (e) {
           console.error(route, e);
           res.status(500).json({ error: e.message });
         }
@@ -35,17 +32,15 @@ async function loadRoutes(dir, base = "/api") {
   }
 }
 
-// Load [action].js routers
 async function loadActionRoutes(dir, base) {
-  const actionFile = join(dir, "[action].js");
   try {
+    const actionFile = join(dir, "[action].js");
     statSync(actionFile);
     const mod = await import("./" + relative(".", actionFile));
-    const handler = mod.default;
     app.all(base + "/:action", async (req, res) => {
       req.query.action = req.params.action;
-      try { await handler(req, res); } catch (e) {
-        console.error(base + "/:action", e);
+      try { await mod.default(req, res); } catch (e) {
+        console.error(base, e);
         res.status(500).json({ error: e.message });
       }
     });
@@ -55,9 +50,9 @@ async function loadActionRoutes(dir, base) {
 
 console.log("Loading routes:");
 await loadRoutes("api");
-for (const sub of ["claim", "inquiry", "order", "penalty", "settlement"]) {
+for (const sub of ["claim","inquiry","order","penalty","settlement"]) {
   await loadActionRoutes(join("api", sub), "/api/" + sub);
 }
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`NavOne server running on port ${port}`));
+app.listen(port, () => console.log("NavOne server on port " + port));
