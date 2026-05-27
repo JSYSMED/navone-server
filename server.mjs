@@ -13,45 +13,46 @@ app.use((req, res, next) => {
   next();
 });
 
-async function loadRoutes(dir, base = "/api") {
+// Direct route loading for _prefixed files
+async function loadPrefixedRoutes(dir, base) {
   for (const f of readdirSync(dir)) {
-    const full = join(dir, f);
-    if (statSync(full).isDirectory()) {
-      await loadRoutes(full, base + "/" + f);
-    } else if (f.endsWith(".js") && !f.startsWith("_") && !f.startsWith("[")) {
-      const route = base + "/" + f.replace(".js", "");
-      const mod = await import("./" + relative(".", full));
-      app.all(route, async (req, res) => {
-        try { await mod.default(req, res); } catch (e) {
-          console.error(route, e);
-          res.status(500).json({ error: e.message });
-        }
-      });
-      console.log("  " + route);
-    }
-  }
-}
-
-async function loadActionRoutes(dir, base) {
-  try {
-    const actionFile = join(dir, "[action].js");
-    statSync(actionFile);
-    const mod = await import("./" + relative(".", actionFile));
-    app.all(base + "/:action", async (req, res) => {
-      req.query.action = req.params.action;
+    if (!f.startsWith("_") || !f.endsWith(".js")) continue;
+    const routeName = f.replace(/^_/, "").replace(".js", "");
+    const route = base + "/" + routeName;
+    const mod = await import("./" + relative(".", join(dir, f)));
+    app.all(route, async (req, res) => {
       try { await mod.default(req, res); } catch (e) {
-        console.error(base, e);
+        console.error(route, e);
         res.status(500).json({ error: e.message });
       }
     });
-    console.log("  " + base + "/:action");
-  } catch {}
+    console.log("  " + route);
+  }
+}
+
+// Top-level route loading
+async function loadTopRoutes(dir, base = "/api") {
+  for (const f of readdirSync(dir)) {
+    const full = join(dir, f);
+    if (statSync(full).isDirectory()) continue;
+    if (!f.endsWith(".js") || f.startsWith("_") || f.startsWith("[")) continue;
+    const route = base + "/" + f.replace(".js", "");
+    const mod = await import("./" + relative(".", full));
+    app.all(route, async (req, res) => {
+      try { await mod.default(req, res); } catch (e) {
+        console.error(route, e);
+        res.status(500).json({ error: e.message });
+      }
+    });
+    console.log("  " + route);
+  }
 }
 
 console.log("Loading routes:");
-await loadRoutes("api");
-for (const sub of ["claim","inquiry","order","penalty","settlement"]) {
-  await loadActionRoutes(join("api", sub), "/api/" + sub);
+await loadTopRoutes("api");
+for (const sub of ["claim", "inquiry", "order", "penalty", "settlement"]) {
+  const dir = join("api", sub);
+  try { statSync(dir); await loadPrefixedRoutes(dir, "/api/" + sub); } catch {}
 }
 
 const port = process.env.PORT || 3000;
