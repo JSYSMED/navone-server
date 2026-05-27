@@ -1,6 +1,4 @@
 import express from "express";
-import { readdirSync, statSync } from "fs";
-import { join, relative } from "path";
 
 const app = express();
 app.use(express.json());
@@ -13,47 +11,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// Direct route loading for _prefixed files
-async function loadPrefixedRoutes(dir, base) {
-  for (const f of readdirSync(dir)) {
-    if (!f.startsWith("_") || !f.endsWith(".js") || f === "_lib.js") continue;
-    const routeName = f.replace(/^_/, "").replace(".js", "");
-    const route = base + "/" + routeName;
-    const mod = await import("./" + relative(".", join(dir, f)));
-    app.all(route, async (req, res) => {
-      try { await mod.default(req, res); } catch (e) {
-        console.error(route, e);
-        res.status(500).json({ error: e.message });
-      }
-    });
-    console.log("  " + route);
-  }
-}
-
-// Top-level route loading
-async function loadTopRoutes(dir, base = "/api") {
-  for (const f of readdirSync(dir)) {
-    const full = join(dir, f);
-    if (statSync(full).isDirectory()) continue;
-    if (!f.endsWith(".js") || f.startsWith("_") || f.startsWith("[")) continue;
-    const route = base + "/" + f.replace(".js", "");
-    const mod = await import("./" + relative(".", full));
-    app.all(route, async (req, res) => {
-      try { await mod.default(req, res); } catch (e) {
-        console.error(route, e);
-        res.status(500).json({ error: e.message });
-      }
-    });
-    console.log("  " + route);
-  }
+async function load(route, path) {
+  const mod = await import(path);
+  app.all(route, async (req, res) => {
+    try { await mod.default(req, res); } catch (e) {
+      console.error(route, e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+  console.log("  " + route);
 }
 
 console.log("Loading routes:");
-await loadTopRoutes("api");
-for (const sub of ["claim", "inquiry", "order", "penalty", "settlement"]) {
-  const dir = join("api", sub);
-  try { statSync(dir); await loadPrefixedRoutes(dir, "/api/" + sub); } catch {}
-}
+await load("/api/review-reply", "./api/review-reply.js");
+await load("/api/store-register", "./api/store-register.js");
+await load("/api/cs-reply", "./api/cs-reply.js");
+await load("/api/my-ip", "./api/my-ip.js");
+await load("/api/dashboard-stats", "./api/dashboard-stats.js");
+await load("/api/history-list", "./api/history-list.js");
+await load("/api/history-push", "./api/history-push.js");
+await load("/api/claim/pending", "./api/claim/_pending.js");
+await load("/api/claim/auto-process", "./api/claim/_auto-process.js");
+await load("/api/claim/manual-decide", "./api/claim/_manual-decide.js");
+await load("/api/inquiry/ai-answer", "./api/inquiry/_ai-answer.js");
+await load("/api/inquiry/list", "./api/inquiry/_list.js");
+await load("/api/inquiry/submit", "./api/inquiry/_submit.js");
+await load("/api/order/pending", "./api/order/_pending.js");
+await load("/api/order/auto-confirm", "./api/order/_auto-confirm.js");
+await load("/api/order/dispatch", "./api/order/_dispatch.js");
+await load("/api/order/dispatch-bulk", "./api/order/_dispatch-bulk.js");
+await load("/api/penalty/risk-scan", "./api/penalty/_risk-scan.js");
+await load("/api/penalty/history", "./api/penalty/_history.js");
+await load("/api/settlement/daily", "./api/settlement/_daily.js");
+await load("/api/settlement/sync", "./api/settlement/_sync.js");
+await load("/api/settlement/margin-rank", "./api/settlement/_margin-rank.js");
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("NavOne server on port " + port));
