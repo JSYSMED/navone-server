@@ -3,6 +3,12 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 30
+    },
+    "api/penalty/*.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/penalty/risk-scan", "schedule": "0 9 * * *" }
+  ]
 }
