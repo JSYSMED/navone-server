@@ -44,10 +44,9 @@ await run({ licenseKey, recentSalesAmount, registrationLimit });
 
 ## Cron (vercel.json)
 ```json
-{ "crons": [{ "path": "/api/penalty/risk-scan", "schedule": "0 9 * * *" }] }
+{ "crons": [{ "path": "/api/penalty/risk-scan", "schedule": "0 0 * * *" }] }
 ```
-> ⚠️ **Vercel Cron은 UTC 기준**이다. `0 9 * * *`는 **UTC 09:00 = KST 18:00**.
-> 한국시간 오전 9시에 돌리려면 `0 0 * * *`로 변경할 것.
+> Vercel Cron은 **UTC 기준**이므로 `0 0 * * *` = **KST 09:00**(한국시간 매일 오전 9시)에 실행된다.
 
 ## 환경변수
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` — Telegram 발송(`lib/telegram.js`)
