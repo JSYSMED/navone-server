@@ -16,7 +16,7 @@ app.use((req, res, next) => {
 // Direct route loading for _prefixed files
 async function loadPrefixedRoutes(dir, base) {
   for (const f of readdirSync(dir)) {
-    if (!f.startsWith("_") || !f.endsWith(".js")) continue;
+    if (!f.startsWith("_") || !f.endsWith(".js") || f === "_lib.js") continue;
     const routeName = f.replace(/^_/, "").replace(".js", "");
     const route = base + "/" + routeName;
     const mod = await import("./" + relative(".", join(dir, f)));
