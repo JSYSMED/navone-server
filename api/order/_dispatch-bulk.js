@@ -13,7 +13,7 @@ import {
   getStoreByLicense, sleep, RPS_DELAY_MS, notify,
   isValidDeliveryCompany, DELIVERY_COMPANIES,
 } from "./_lib.js";
-import { dispatchOne } from "./dispatch.js";
+import { dispatchOne } from "./_dispatch.js";
 
 function fail(res, status, code, message, detail) {
   return res.status(status).json({ success: false, error: { code, message, detail } });
