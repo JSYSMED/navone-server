@@ -44,15 +44,42 @@ export default async function handler(req, res) {
       return fail(res, 400, "NO_COMMERCE_CRED", "커머스 API 인증 정보(client_id/secret)가 없습니다.");
     }
 
-    // commerceRequest 내부에 RPS 가드(초당 2회 이하)가 있어 별도 throttle 불필요.
-    const raw = await commerceRequest("/external/v1/pay-order/seller/settlements/daily", {
-      clientId: store.client_id,
-      clientSecret: store.client_secret,
-      method: "GET",
-      query: { startDate: start, endDate: end },
-    });
+    // 마진율 랭킹은 "상품 단위" 데이터가 필요 → 건별 정산 내역 조회(/case) 사용.
+    //  (일별 /daily은 날짜별 집계라 상품정보·product_order_id가 없어 마진 계산 불가)
+    //  건별은 searchDate(단일 일자) 기준이라, 기간을 하루씩 돌며 수집한다.
+    //  필수 파라미터: searchDate, pageNumber, pageSize(1000 이하).
+    const dayList = [];
+    {
+      const s = new Date(start + "T00:00:00");
+      const e = new Date(end + "T00:00:00");
+      for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+        dayList.push(d.toISOString().slice(0, 10));
+      }
+    }
 
-    const items = extractSettlementItems(raw);
+    const allItems = [];
+    for (const day of dayList) {
+      // commerceRequest 내부 RPS 가드(초당 2회 이하)가 있어 순차 호출로 충분.
+      const raw = await commerceRequest("/external/v1/pay-settle/settle/case", {
+        clientId: store.client_id,
+        clientSecret: store.client_secret,
+        method: "GET",
+        query: {
+          periodType: "SETTLE_CASEBYCASE_SETTLE_BASIS_DATE",
+          searchDate: day,
+          pageNumber: 1,
+          pageSize: 1000,
+        },
+      });
+      const dayItems = extractSettlementItems(raw);
+      // 정산일이 응답에 없을 수 있으니 조회한 날짜를 주입(집계 키 보존).
+      for (const it of dayItems) {
+        if (!it.settleBasisDate) it.settleBasisDate = day;
+      }
+      allItems.push(...dayItems);
+    }
+
+    const items = allItems;
     const rows = items.map((it) => normalizeSettlementRow(it, store.id));
 
     // 유니크 키 구성요소(settlement_date, product_order_id)가 모두 있는 행만 upsert.

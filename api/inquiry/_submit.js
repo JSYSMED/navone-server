@@ -4,10 +4,10 @@
 //
 // ★ 규칙: 답변 등록 전 반드시 로그(cs_history) 저장 → 그 다음 커머스 등록.
 //
+// 인증: licenseKey → store(client_id/secret) → 서버가 토큰 발급(qa·정산과 통일).
 // body: {
 //   inquiryId, content,
-//   token,                 (또는 헤더 x-naver-token)
-//   licenseKey,            (로그 적재용; 없으면 로그 best-effort 스킵)
+//   licenseKey,            (필수 — 인증 + 로그 적재)
 //   inquiry: { productName, content },  (로그 보강용, 선택)
 //   mode: "manual" | "auto"
 // }
@@ -17,15 +17,7 @@ import {
   setCors, handlePreflight,
   HISTORY_TABLES, buildHistoryRow, getStoreIdByLicense, sbInsert,
 } from "../../lib/supabase.js";
-import { submitInquiryAnswer } from "../../lib/inquiry.js";
-
-function readToken(req, body) {
-  const h = req.headers || {};
-  if (h["x-naver-token"]) return h["x-naver-token"];
-  const auth = h["authorization"] || "";
-  if (auth.toLowerCase().startsWith("bearer ")) return auth.slice(7);
-  return body.token || "";
-}
+import { submitInquiryAnswer, getStoreByLicense } from "../../lib/inquiry.js";
 
 // 등록 전 감사 로그 적재. Supabase 미설정/스토어 미등록 시에도 등록을 막지 않도록 best-effort.
 async function logBeforeSubmit({ licenseKey, inquiryId, content, inquiry, mode }) {
@@ -58,17 +50,18 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
     const { inquiryId, content, licenseKey, inquiry, mode } = body;
-    const token = readToken(req, body);
 
-    if (!token) return res.status(401).json({ error: "커머스 토큰이 필요합니다." });
     if (!inquiryId) return res.status(400).json({ error: "inquiryId는 필수입니다." });
     if (!content || !content.trim()) return res.status(400).json({ error: "답변 내용은 필수입니다." });
+
+    // 인증: licenseKey로 store 조회 (qa·정산과 동일)
+    const store = await getStoreByLicense(licenseKey);
 
     // 1) 등록 전 로그 저장 (규칙)
     const logResult = await logBeforeSubmit({ licenseKey, inquiryId, content, inquiry, mode });
 
     // 2) 커머스 답변 등록
-    await submitInquiryAnswer({ token, inquiryId, content });
+    await submitInquiryAnswer({ store, inquiryId, content });
 
     return res.status(200).json({ success: true, logged: logResult.logged });
   } catch (err) {

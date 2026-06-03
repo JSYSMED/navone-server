@@ -5,12 +5,12 @@
 //   GET /api/settlement/daily?licenseKey=...&start=YYYY-MM-DD&end=YYYY-MM-DD
 //   응답: { success: true, data: { rows, daily, range } }
 //
-// Commerce API: GET /external/v1/pay-order/seller/settlements/daily (startDate, endDate)
+// Commerce API: GET /external/v1/pay-settle/settle/daily (startDate, endDate, pageNumber, pageSize)
 // =============================================
 
 import { setCors, handlePreflight, assertEnv, sbSelect } from "../../lib/supabase.js";
 import { commerceRequest } from "../../lib/commerce-auth.js";
-import { extractSettlementItems, normalizeSettlementRow, aggregateDaily, fail, sendFail } from "../../lib/settlement.js";
+import { extractSettlementItems, normalizeDailyRow, aggregateDaily, fail, sendFail } from "../../lib/settlement.js";
 
 // 기본 조회 범위: 최근 30일.
 function defaultRange() {
@@ -43,15 +43,18 @@ export default async function handler(req, res) {
       return fail(res, 400, "NO_COMMERCE_CRED", "커머스 API 인증 정보(client_id/secret)가 없습니다.");
     }
 
-    const raw = await commerceRequest("/external/v1/pay-order/seller/settlements/daily", {
+    // 일별 정산 내역 조회: GET /external/v1/pay-settle/settle/daily
+    // 필수 파라미터: startDate, endDate, pageNumber, pageSize(1000 이하)
+    // 응답: { elements: [...일별 집계...], pagination: { page, size, totalPages, totalElements } }
+    const raw = await commerceRequest("/external/v1/pay-settle/settle/daily", {
       clientId: store.client_id,
       clientSecret: store.client_secret,
       method: "GET",
-      query: { startDate: start, endDate: end },
+      query: { startDate: start, endDate: end, pageNumber: 1, pageSize: 1000 },
     });
 
     const items = extractSettlementItems(raw);
-    const rows = items.map((it) => normalizeSettlementRow(it, store.id));
+    const rows = items.map((it) => normalizeDailyRow(it, store.id));
     const daily = aggregateDaily(rows);
 
     return res.status(200).json({
