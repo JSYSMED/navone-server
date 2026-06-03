@@ -45,7 +45,7 @@ await load("/api/penalty/history", "./api/penalty/_history.js");
 await load("/api/settlement/daily", "./api/settlement/_daily.js");
 await load("/api/settlement/sync", "./api/settlement/_sync.js");
 await load("/api/settlement/margin-rank", "./api/settlement/_margin-rank.js");
-await load("/api/ad/efficiency", "./api/ad/_efficiency.js");
+await load("/api/settlement/commission-roi", "./api/settlement/_commission-roi.js");await load("/api/ad/efficiency", "./api/ad/_efficiency.js");
 await load("/api/ad/recommendations", "./api/ad/_recommendations.js");
 await load("/api/ad/alert", "./api/ad/_alert.js");
 await load("/api/qa/list", "./api/qa/_list.js");

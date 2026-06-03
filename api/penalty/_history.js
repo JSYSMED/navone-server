@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const { licenseKey, limit } = req.query || {};
     const lim = Math.min(parseInt(limit, 10) || 30, 100);
 
-    let query = `select=*&order=scanned_at.desc&limit=${lim}`;
+    let query = `select=*&order=created_at.desc&limit=${lim}`;
     if (licenseKey) {
       const storeId = await getStoreIdByLicense(licenseKey);
       if (!storeId) {
