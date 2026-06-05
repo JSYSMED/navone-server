@@ -40,6 +40,7 @@ await load("/api/order/pending", "./api/order/_pending.js");
 await load("/api/order/auto-confirm", "./api/order/_auto-confirm.js");
 await load("/api/order/dispatch", "./api/order/_dispatch.js");
 await load("/api/order/dispatch-bulk", "./api/order/_dispatch-bulk.js");
+await load("/api/order/sales-status", "./api/order/_sales-status.js");
 await load("/api/penalty/risk-scan", "./api/penalty/_risk-scan.js");
 await load("/api/penalty/history", "./api/penalty/_history.js");
 await load("/api/settlement/daily", "./api/settlement/_daily.js");
