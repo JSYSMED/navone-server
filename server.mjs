@@ -5,7 +5,7 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   next();
@@ -54,6 +54,9 @@ await load("/api/qa/auto-process", "./api/qa/_auto-process.js");
 await load("/api/group/suggest", "./api/group/_suggest.js");
 await load("/api/group/create", "./api/group/_create.js");
 await load("/api/group/list", "./api/group/_list.js");
+await load("/api/product/cost-list", "./api/product/_cost-list.js");
+await load("/api/product/cost-bulk", "./api/product/_cost-bulk.js");
+await load("/api/product/cost", "./api/product/_cost.js");
 await load("/api/product-ai/analyze", "./api/product-ai/_analyze.js");
 await load("/api/product-ai/generate", "./api/product-ai/_generate.js");
 await load("/api/product-ai/apply", "./api/product-ai/_apply.js");

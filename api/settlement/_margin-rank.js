@@ -6,13 +6,13 @@
 //   응답: { success: true, data: { ranking, lossCount, range, costConfigured } }
 //
 //   마진율 = (정산금 - 원가) / 판매가 × 100
-//   원가 = stores.config.product_configs[*].min_sale_price (셀러가 chrome.storage 에 설정 → 서버 동기화)
+//   원가 = navone_product_cost 테이블의 입력 원가 (channel_product_no 기준)
 //
 // 주의: 최신 데이터를 보려면 먼저 POST /api/settlement/sync 로 동기화 필요.
 // =============================================
 
 import { setCors, handlePreflight, assertEnv, sbSelect } from "../../lib/supabase.js";
-import { computeMarginRanking, buildCostMap, fail, sendFail } from "../../lib/settlement.js";
+import { computeMarginRanking, buildProductCostMap, fail, sendFail } from "../../lib/settlement.js";
 
 function defaultRange() {
   const end = new Date();
@@ -51,10 +51,31 @@ export default async function handler(req, res) {
         "&order=settlement_date.desc&limit=5000"
     );
 
-    const costMap = buildCostMap(store.config);
+    // 입력 원가(navone_product_cost) 조회 → channel_product_no → { cost } 맵.
+    const costRows = await sbSelect(
+      "navone_product_cost",
+      "license_key=eq." + encodeURIComponent(licenseKey) +
+        "&select=channel_product_no,cost&limit=10000"
+    );
+    const costMap = buildProductCostMap(costRows);
+    const costConfigured = Object.keys(costMap).length;
+
+    // 원가 0건이면 프론트가 빈 상태를 처리하도록 ranking 은 빈 배열로.
+    if (costConfigured === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          ranking: [],
+          lossCount: 0,
+          costConfigured: 0,
+          productCount: 0,
+          range: { start, end },
+        },
+      });
+    }
+
     const ranking = computeMarginRanking(rows || [], costMap);
     const lossCount = ranking.filter((r) => r.isLoss).length;
-    const costConfigured = Object.keys(costMap).length;
 
     return res.status(200).json({
       success: true,

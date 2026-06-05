@@ -6,9 +6,12 @@
 
 | Method | Path | 설명 |
 |--------|------|------|
-| GET  | `/api/settlement/daily?licenseKey=&start=&end=` | 네이버 정산 API 실시간 조회 (DB 저장 안 함). `start`/`end` 생략 시 최근 30일. |
-| GET  | `/api/settlement/margin-rank?licenseKey=&start=&end=` | `navone_settlements` 기반 상품별 마진율 랭킹 + 적자 상품 카운트. |
-| POST | `/api/settlement/sync` | body `{ licenseKey, start?, end? }`. 정산 API → `navone_settlements` upsert (멱등). |
+| GET  | `/api/settlement/daily?licenseKey=&start=&end=` | 일별 정산 조회. 네이버 `/external/v1/pay-settle/settle/daily` (날짜별 집계). `start`/`end` 생략 시 최근 30일. |
+| POST | `/api/settlement/sync` | body `{ licenseKey, start?, end? }`. **건별** 정산(`/external/v1/pay-settle/settle/case`, searchDate 단위라 하루씩 루프) → `navone_settlements` upsert. |
+| GET  | `/api/settlement/margin-rank?licenseKey=&start=&end=` | `navone_settlements` 기반 상품별 마진율 랭킹. PROD_ORDER만 대상. |
+| GET  | `/api/settlement/commission-roi?licenseKey=&start=&end=` | 수수료 외부유입 ROI. `/external/v1/pay-settle/settle/commission-details` 로 내부(PLT)/외부(PLF) 유입 역산 + 절약 시뮬. |
+
+> ⚠️ 정산 경로 주의: 일별/건별/수수료 모두 `pay-settle/settle/*` 이며 `pageNumber`/`pageSize` 필수. 수수료 금액은 음수로 와서 절댓값 처리. (구 경로 `pay-order/seller/settlements` 는 틀림 — 수정됨)
 
 응답 형식: 성공 `{ success: true, data: {...} }` / 실패 `{ success: false, error: { code, message } }`.
 
