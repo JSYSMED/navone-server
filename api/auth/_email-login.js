@@ -43,7 +43,6 @@ export default async function handler(req, res) {
       return fail(res, 403, "SUSPENDED", "이용이 정지된 계정입니다. 관리자에게 문의하세요.");
     }
 
-    await sbUpsert("navone_users", { id: user.id, last_login_at: new Date().toISOString() }, "id");
 
     const token = signSession({ uid: user.id, licenseKey: user.license_key, plan: user.plan });
     res.setHeader("Set-Cookie", [
