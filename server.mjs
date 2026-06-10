@@ -1,7 +1,23 @@
+import "dotenv/config";
 import express from "express";
+import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
+
+// 쿠키 세션이 있으면 licenseKey를 query에 주입 (기존 라우트 무수정 호환)
+app.use(async (req, res, next) => {
+  try {
+    const token = req.cookies?.co_session;
+    if (token && !req.query.licenseKey) {
+      const { verifySession } = await import("./lib/auth-util.js");
+      const sess = verifySession(token);
+      if (sess?.licenseKey) req.query.licenseKey = sess.licenseKey;
+    }
+  } catch {}
+  next();
+});
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -58,6 +74,10 @@ await load("/api/group/list", "./api/group/_list.js");
 await load("/api/product/cost-list", "./api/product/_cost-list.js");
 await load("/api/product/cost-bulk", "./api/product/_cost-bulk.js");
 await load("/api/product/cost", "./api/product/_cost.js");
+await load("/api/catalog-map/bulk", "./api/catalog-map/_bulk.js");
+await load("/api/catalog-map/list", "./api/catalog-map/_list.js");
+await load("/api/automation/config", "./api/automation/_config.js");
+await load("/api/cache/feature", "./api/cache/_feature.js");
 await load("/api/product-ai/analyze", "./api/product-ai/_analyze.js");
 await load("/api/product-ai/generate", "./api/product-ai/_generate.js");
 await load("/api/product-ai/apply", "./api/product-ai/_apply.js");
@@ -65,6 +85,10 @@ await load("/api/product-ai/bulk-analyze", "./api/product-ai/_bulk-analyze.js");
 await load("/api/review/sync", "./api/review/_sync.js");
 await load("/api/review/list", "./api/review/_list.js");
 await load("/api/review/replied", "./api/review/_replied.js");
+await load("/api/auth/naver/login", "./api/auth/_login.js");
+await load("/api/auth/naver/callback", "./api/auth/_callback.js");
+await load("/api/auth/me", "./api/auth/_me.js");
+await load("/api/auth/logout", "./api/auth/_logout.js");
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log("NavOne server on port " + port));
