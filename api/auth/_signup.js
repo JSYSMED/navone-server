@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     // 세션 발급 (가입=로그인). 기능 접근은 status로 별도 게이트.
     const token = signSession({ uid: user.id, licenseKey: user.license_key, plan: user.plan });
     res.setHeader("Set-Cookie", [
-      `co_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${30 * 24 * 3600}`,
+      `co_session=${token}; Domain=.commerone.store; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${30 * 24 * 3600}`,
     ]);
 
     return res.status(200).json({

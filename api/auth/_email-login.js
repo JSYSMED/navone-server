@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 
     const token = signSession({ uid: user.id, licenseKey: user.license_key, plan: user.plan });
     res.setHeader("Set-Cookie", [
-      `co_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${30 * 24 * 3600}`,
+      `co_session=${token}; Domain=.commerone.store; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${30 * 24 * 3600}`,
     ]);
 
     return res.status(200).json({
