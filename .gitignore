@@ -8,3 +8,4 @@ __pycache__/
 .env*
 debug-*.mjs
 debug-*.mjs
+*.bak_*
