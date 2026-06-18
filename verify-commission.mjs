@@ -52,6 +52,14 @@ async function main(){
   console.log(`   50% 전환 → ${won(a.savingsIf.shift50)}원`);
   console.log(`   100% 전환 → ${won(a.savingsIf.shift100)}원`);
   line();
+  console.log("외부유입으로 신규 매출 만들 때 순증(유입매출 기준):");
+  for (const [tag, t] of [["+10%", a.growthIf.plus10], ["+20%", a.growthIf.plus20], ["+30%", a.growthIf.plus30]]) {
+    console.log(`   외부유입 ${tag} → 매출 +${won(t.extraSales)} / 순증 +${won(t.extraNet)} (내부比 수수료 ${won(t.feeEdge)} 덜 냄)`);
+  }
+  line();
+  console.log("수수료 구성(도넛):");
+  (a.feeMix || []).forEach(f => console.log(`   ${f.name}: ${won(f.val)}원 (${a.feeMixTotal ? (f.val / a.feeMixTotal * 100).toFixed(0) : 0}%)`));
+  line();
   if (a.totalInterlockBase>0) {
     console.log("검증 완료: 내부/외부 유입 역산 + 절약 시뮬 정상 OK");
     if (a.external.base===0) console.log("(이 스토어는 외부유입 0 — 100% 내부유입. NavOne이 절약 여지를 제시할 대상)");
