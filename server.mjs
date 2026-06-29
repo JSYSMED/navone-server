@@ -3,7 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "25mb" }));
 app.use(cookieParser());
 
 // 쿠키 세션이 있으면 licenseKey를 query에 주입 (기존 라우트 무수정 호환)
