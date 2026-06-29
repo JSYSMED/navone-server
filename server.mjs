@@ -83,6 +83,8 @@ await load("/api/product-ai/analyze", "./api/product-ai/_analyze.js");
 await load("/api/product-ai/generate", "./api/product-ai/_generate.js");
 await load("/api/product-ai/apply", "./api/product-ai/_apply.js");
 await load("/api/product-ai/bulk-analyze", "./api/product-ai/_bulk-analyze.js");
+await load("/api/product-ai/detail-registration", "./api/product-ai/_detail-registration.js");
+await load("/api/product-ai/detail-generate", "./api/product-ai/_detail-generate.js");
 await load("/api/review/sync", "./api/review/_sync.js");
 await load("/api/review/list", "./api/review/_list.js");
 await load("/api/review/replied", "./api/review/_replied.js");
